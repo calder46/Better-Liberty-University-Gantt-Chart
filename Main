@@ -1,4 +1,4 @@
-//package personal;
+package personal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,11 +44,31 @@ To do this, we'll get a pdf of course requirements from the liberty site, then r
             buffer.append((char)ptr);
         }
         
-        //url.
-        
-        Matcher findPreReq = Pattern.compile("href=\"/search/.+?\"").matcher(buffer);
+        int index = 0;
+        Matcher findPreReq = Pattern.compile("\"/search/.+?\"").matcher(buffer);
         while (findPreReq.find()) {
-            System.out.println(findPreReq.group());
+            String nextPR = findPreReq.group();
+            System.out.println(nextPR);
+            URL catalogue = new URL("https://catalog.liberty.edu/" + nextPR.replace('"', ' ').strip());
+            
+            
+            InputStream query = catalogue.openStream();
+            StringBuffer loader = new StringBuffer();
+            while ((ptr = query.read()) != -1) {
+                loader.append((char)ptr);
+            }
+            
+            //get text from catalogue page, looking for prerequisites
+            String catalogueText = loader.toString();
+            index = catalogueText.indexOf("Prerequisite");
+            if (index == -1) {
+                System.out.println(index + " No Prerequisites for this course");
+            } else {
+                System.out.print(index + " ");
+                System.out.println("catalogue " + catalogueText.substring(index, index + 800));
+            }
+
+            //loader = null;
         }
         //System.out.print(buffer);
     }
