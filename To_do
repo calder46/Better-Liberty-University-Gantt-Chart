@@ -1,0 +1,8 @@
+As of right now, the Information_Gatherer code is an disorganized mess, so someone should probably make it cleaner at some point. []
+The actual Gantt chart GUI needs to be built. []
+  It will need methods to alter the Gnatt chart [],
+  logic to check if alterations are valid [],
+  and enable users to check off completed courses [].
+It will indirectely need code in place to detect logical constraints of courses [],      (AND, OR, ect.)
+  different requirements for online or residential offerings [], 
+  and constraints unspecified by the catalogue’s webpage (for example: capstone classes such as CSIS 484 must be taken during certain semesters, such as the spring semester). [] (Genuinely HOW do we do this)
