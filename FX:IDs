@@ -1,0 +1,12 @@
+FX:IDs
+
+Dashboard.fxml
+- remainingCourses
+- externalCourses
+- year1Fall, year1Spring, year2Fall, etc.
+
+CourseBlock.fxml
+- courseBlock (The background)
+- courseLabel (e.g. CSIS 312)
+- courseCredits
+- checkbox
