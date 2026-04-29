@@ -1,4 +1,4 @@
-package gui_test;
+package dashboard;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,7 +16,9 @@ public class DashboardController {
     @FXML private VBox year1Fall, year1Spring, year2Fall, year2Spring;
     @FXML private VBox year3Fall, year3Spring, year4Fall, year4Spring;
 
+    @FXML
     public void initialize() {
+        // Set up drop targets for all semester columns
         VBox[] semesterBoxes = {
             remainingCourses, externalCourses, 
             year1Fall, year1Spring, year2Fall, year2Spring, 
@@ -29,54 +31,26 @@ public class DashboardController {
             }
         }
 
-        // Standard course load initialization
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        addCourseToRemaining("MATH 101");
-        addCourseToRemaining("CSIS 312");
-        addCourseToRemaining("ENGL 101");
-        addCourseToRemaining("PHYS 231");
-        // Add more courses as needed for your scroll test
+        // Populate the initial list
+        addCourseToRemaining("MATH 101", "3");
+        addCourseToRemaining("CSIS 312", "3");
+        addCourseToRemaining("ENGL 101", "3");
+        addCourseToRemaining("PHYS 231", "4");
     }
 
-    private void addCourseToRemaining(String courseName) {
+    private void addCourseToRemaining(String name, String credits) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui_test/CourseBlock.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/dashboard/CourseBlock.fxml"));
             Parent courseNode = loader.load();
             
             CourseBlockController controller = loader.getController();
-            controller.setCourseName(courseName);
+            controller.setCourseDetails(name, credits);
             
             if (remainingCourses != null) {
                 remainingCourses.getChildren().add(courseNode);
             }
         } catch (IOException e) {
+            System.err.println("Error loading CourseBlock.fxml: " + e.getMessage());
             e.printStackTrace();
         }
     }
