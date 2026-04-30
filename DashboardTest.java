@@ -9,9 +9,10 @@ import javafx.stage.Stage;
 public class DashboardTest extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception { //opens window upon launch
-        // Changed "/dashboard/" to "/Dashboard/" to match your package name
-        Parent root = FXMLLoader.load(getClass().getResource("/Dashboard/Dashboard.fxml")); 
+    public void start(Stage primaryStage) throws Exception { 
+        // FIX: Removed leading slash and package name to use relative path
+        Parent root = FXMLLoader.load(getClass().getResource("Dashboard.fxml")); 
+        
         primaryStage.setTitle("DCP Planning Tool");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
