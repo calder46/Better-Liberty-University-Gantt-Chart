@@ -2,183 +2,155 @@ package JavaFinalProject;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-/**
- *
- * @author cfurm
- */
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.function.Consumer;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-public class Gnattural_Resolution {
-/*
-basic plan: Liberty University has certain course requirements for each major. It's registration website does not contain
-a simple visual representation of course precidence. I want to make a mapping tool to help students plan their college courses.
-To do this, we'll get a pdf of course requirements from the liberty site, then read the restrictions from the site HTML
-    or get the user to manually input them.
-    the Gnatt chart will be visualized in a GUI for ovbious reasons. Since a user may desire it, the following features 
-    should be implemented: 
-    1. the ability to 'check off' completed or bypassed courses. 
-    2. a timeline of how soon graduation can be pursued, based on course precidence and an adjustable credits per year slider. 
-    (this could also be editable on a per-year basis).
-    3. the ability to save and load serializable files so users may easily retain information.
-    4. as a stretch goal, the ability to add more majors to the course selection.
-    5. verify that the user is attempting to access liberty's website before getting data to prevent security risks (throw exception if input url is invalid)
-    
-    identified hurdle: the HTML containing prerequisite info doesn't exist till you click on the link
-    some way to do this automatically could work
- */
-    
-    static ArrayList<Course> courses = new ArrayList();
-    
-    public static Course[] run(String args) throws MalformedURLException, IOException {
-        
-        /**
-         * Inital data loading
-         */
-        //resource initialization
-        Pattern findStrongdiv = Pattern.compile("<strong>.+?</strong>");
-        Pattern findPrereq = Pattern.compile("<div class=\"cou.+?Prerequisite.+?</div>");
-        Pattern courseName = Pattern.compile("title=\"[A-Z]{4}..\\d{3}");
-        //Scanner userInput = new Scanner(System.in); 
-        
-        //System.out.print("Please copy-paste liberty's URL for the course plan:");
-        
-        //get data from offering webpage (such as https://catalog.liberty.edu/undergraduate/colleges-schools/business/information-technology-major-bs/application-database-development-resident/index.html?_gl=1*1vvwump*_ga*OTI5NDU1MDMxLjE3NTk5ODMzNTU.*_ga_YK8WH8QD6R*czE3NzY2NzU1MDUkbzIxMSRnMSR0MTc3NjY3NzIyNyRqNDIkbDAkaDA.*_ga_T1DG1LRPCP*czE3NzY2NzU1MTEkbzY2JGcxJHQxNzc2Njc3MjI3JGo0NiRsMCRoMA..#coursesequencetext)
-        //got this from https://stackoverflow.com/questions/31462/how-to-fetch-html-in-java
-        //String theURL = userInput.next();
-        URL url = new URL(args);
-        InputStream is = url.openStream();
-        int ptr = 0;
-        StringBuffer buffer = new StringBuffer();
-        while ((ptr = is.read()) != -1) {
-            buffer.append((char)ptr);
+import java.util.regex.Pattern;
+
+public class Information_Gatherer {
+
+    // Precompiled regex patterns (performance improvement)
+    private static final Pattern STRONG_TAG = Pattern.compile("<strong>.+?</strong>");
+    private static final Pattern PREREQ_DIV = Pattern.compile("<div class=\"cou.+?Prerequisite.+?</div>");
+    private static final Pattern COURSE_NAME = Pattern.compile("title=\"[A-Z]{4}..\\d{3}");
+    private static final Pattern SUBLINK_PATTERN = Pattern.compile("\"/search/.+?\"");
+
+    private static final ArrayList<Course> courses = new ArrayList<>();
+
+    public static void main(String[] args) throws MalformedURLException, IOException {
+
+        Scanner userInput = new Scanner(System.in);
+        System.out.print("Please paste Liberty's URL for the course plan: ");
+
+        String theURL = userInput.next();
+        String mainPageHTML = loadURL(theURL);
+
+        Matcher sublinkMatcher = SUBLINK_PATTERN.matcher(mainPageHTML);
+
+        while (sublinkMatcher.find()) {
+
+            String sublink = sublinkMatcher.group().replace("\"", "").strip();
+            String fullURL = "https://catalog.liberty.edu/" + sublink;
+
+            String coursePageHTML = loadURL(fullURL);
+            processCoursePage(coursePageHTML);
+
+            // Progress indicator
+            System.out.printf("\nProgress: %.2f%%",
+                    (float) sublinkMatcher.end() / mainPageHTML.length() * 100);
         }
-        /**
-         * Subdata loading
-         */
-        //get data from each of the sublinks, to see if any course has prerequisites
-        Matcher subCatOpener = Pattern.compile("\"/search/.+?\"").matcher(buffer); //this finds prerequisites
-        while (subCatOpener.find()) {
-            String nextPR = subCatOpener.group();
-            //System.out.println(nextPR);
-            URL catalogue = new URL("https://catalog.liberty.edu/" + nextPR.replace('"', ' ').strip());
-            
-            
-            InputStream query = catalogue.openStream();
-            StringBuffer loader = new StringBuffer();
-            while ((ptr = query.read()) != -1) {
-                loader.append((char)ptr);
-            }
 
-            //get text from catalogue page
-            String catalogueText = loader.toString();
-            
-            //create corresponding course 
-            //get course title description index 
-            int titleInd = catalogueText.indexOf("<div class=\"cols noindent\">");
-            //initiate quickstop flag
-            boolean quickstop = false;
-            if (titleInd != -1) {
-                String title = catalogueText.substring(titleInd, titleInd + 12048); //this seems large enough
-                //create matcher to extract content from strong text (bolded sections)
-                Matcher strongExtractor = findStrongdiv.matcher(title);
-                
-                //System.out.println("<TITLE>" + title + "</TITLE>");//debug print method
-                
-                //find name 
-                strongExtractor.find(); //get next match for <strong>.+?</strong>
-                String name = strongExtractor.group(); //return match 
-                name = name.substring(8, name.length()-9); //remove extra locator bits [<strong>,</strong>]
-                
-                //check if course already exists
-                for(Course c: courses) {
-                    if (c.getName().equals(name)) {
-                        strongExtractor.find(); strongExtractor.find(); //skip the next 2
-                        quickstop = true;
-                    }
-                }
-                if (quickstop) {
-                    //don't do more than you need to
-                } else {
-                    
-                    //find credit hours
-                    strongExtractor.find(); //skip past proper name section we don't need it
-                    strongExtractor.find(); //get next match
-                    String creditHours = strongExtractor.group(); //return match
-                    creditHours = creditHours.replaceAll("\\D", ""); //remove anything that isn't a digit ("3 Credit Hour(s)" -> "3")
+        // Test course (unchanged)
+        Course test = new Course("TEST 001", "5");
+        test.addPrerequisite(courses.get(1));
+        test.addPrerequisite(courses.get(10));
+        courses.add(test);
 
-                    courses.add(new Course(name, creditHours));
-
-                    //find prerequisites
-                    Matcher prereqExtractor = findPrereq.matcher(catalogueText);
-                    if (prereqExtractor.find()){ //if a prerequisite is found
-                        //prep a matcher to scan the prerequisites, based on the match from prereqextractor
-                        Matcher courseExtractor = courseName.matcher(prereqExtractor.group());
-                        //System.out.println(prereqExtractor.group());
-
-                        /**
-                         * Course addition block
-                         */
-                        while (courseExtractor.find()) {//get prerequisite course name, format: "title=\"[A-Z]{4} \\d{3}".
-                            String namelocal = courseExtractor.group().substring(7); //7 converts [title="ESOL 100] -> [ESOL 100]
-                            //System.out.printf("\nnamelocal: %s\n", namelocal); //debug print
-                            //I decided "Screw it this is too convoluted" so I moved this part to it's own function
-                            isREALcourse(namelocal); 
-                        } //repeat until no more course names are given.
-                        //TODO: somehow find alternate prerequisite methods and include them as strings
-                        //example: Online Prerequisite: ENGL 100 or ESOL 100 or Placement Score-English with a score of 070 or Assessment - English with a score of 32
-                    } 
-                }   
-            } else {            
-            //scan list of courses for a match
-            //if found, add as prerequisite
-            //otherwise, add new course somehow
-                System.out.println(" No Prerequisites for this course");
-            }
-            System.out.printf("\n Progress: %.3f", ((float) subCatOpener.end()/catalogueText.length()*100));//progress loading indicator
-        }
-            //loader = null;
-        //System.out.print(buffer);
-        //Course c = new Course("TEST 001", "5");
-        //c.addPrerequisite(courses.get(1));
-        //c.addPrerequisite(courses.get(10));
-        //courses.add(c);
-    printAllCourses();
-    return courses;
+        printAllCourses();
     }
+
+    // -----------------------------
+    //         CORE METHODS
+    // -----------------------------
+
+    private static void processCoursePage(String html) {
+
+        int titleIndex = html.indexOf("<div class=\"cols noindent\">");
+        if (titleIndex == -1) {
+            System.out.println("No prerequisites found for this course.");
+            return;
+        }
+
+        // Extract a reasonable chunk of HTML
+        String titleBlock = html.substring(titleIndex, Math.min(titleIndex + 12048, html.length()));
+        Matcher strongMatcher = STRONG_TAG.matcher(titleBlock);
+
+        if (!strongMatcher.find()) return;
+
+        // Extract course name
+        String name = stripTags(strongMatcher.group());
+        if (courseExists(name)) {
+            skipTwoStrongTags(strongMatcher);
+            return;
+        }
+
+        // Extract credit hours
+        strongMatcher.find(); // skip name
+        strongMatcher.find(); // credit hours
+        String creditHours = strongMatcher.group().replaceAll("\\D", "");
+
+        Course newCourse = new Course(name, creditHours);
+        courses.add(newCourse);
+
+        // Extract prerequisites
+        Matcher prereqMatcher = PREREQ_DIV.matcher(html);
+        if (prereqMatcher.find()) {
+            Matcher courseMatcher = COURSE_NAME.matcher(prereqMatcher.group());
+            while (courseMatcher.find()) {
+                String prereqName = courseMatcher.group().substring(7);
+                addOrLinkPrerequisite(prereqName);
+            }
+        }
+    }
+
+    private static void addOrLinkPrerequisite(String prereqName) {
+
+        int index = findCourseIndex(prereqName);
+
+        if (index != -1) {
+            courses.getLast().addPrerequisite(courses.get(index));
+        } else {
+            // Insert new course BEFORE the current one
+            courses.add(courses.size() - 1, new Course(prereqName));
+        }
+    }
+
+    // -----------------------------
+    //         UTILITIES
+    // -----------------------------
+
+    private static String loadURL(String urlString) throws IOException {
+        URL url = new URL(urlString);
+        InputStream is = url.openStream();
+
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ((c = is.read()) != -1) {
+            sb.append((char) c);
+        }
+        return sb.toString();
+    }
+
+    private static boolean courseExists(String name) {
+        return courses.stream().anyMatch(c -> c.getName().equals(name));
+    }
+
+    private static int findCourseIndex(String name) {
+        for (int i = 0; i < courses.size(); i++) {
+            if (courses.get(i).getName().equals(name)) return i;
+        }
+        return -1;
+    }
+
+    private static void skipTwoStrongTags(Matcher m) {
+        if (m.find()) m.find();
+    }
+
+    private static String stripTags(String strongTag) {
+        return strongTag.substring(8, strongTag.length() - 9);
+    }
+
     private static void printAllCourses() {
         for (Course c : courses) {
-            System.out.print(c.getName()); 
+            System.out.print(c.getName());
             if (c.getHours() == 0) {
                 System.out.print(", external.");
             } else {
                 System.out.printf(", credit hours: %d", c.getHours());
             }
-            System.out.printf("%s%n", c.getPrerequisites());
-        }
-    }
-    private static void isREALcourse (String s) { 
-    int index = -1;//this boolean tracks [if a course exists already, add it as a prerequisite]
-        //scan courses for match
-        for (int i = 0; i < courses.size(); i++) {//read from the entire list of courses to see if there's any match (this isn't efficient, but no offering should be so long as to make that a problem)
-            if (courses.get(i).getName().equals(s)) {
-                index = i; break;   
-            }
-        }
-        //add new course as appropriate
-        if (index != -1) {
-            //add existing course as prerequisiste
-            courses.getLast().addPrerequisite(courses.get(index));
-        } else {
-            //add new course as prerequisite
-            courses.add(courses.size() - 1, new Course(s));
+            System.out.println(c.getPrerequisites());
         }
     }
 }
-
-
