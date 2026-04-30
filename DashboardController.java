@@ -19,12 +19,15 @@ public class DashboardController {
     @FXML private VBox remainingCourses, externalCourses;
     @FXML private VBox year1Fall, year1Spring, year2Fall, year2Spring;
     @FXML private VBox year3Fall, year3Spring, year4Fall, year4Spring;
+    @FXML private TextField URLBox; //make sure to implement this in SceneBuilder
     
     @FXML private Label remainingTotal, externalTotal;
     @FXML private Label year1FallTotal, year1SpringTotal, year2FallTotal, year2SpringTotal;
     @FXML private Label year3FallTotal, year3SpringTotal, year4FallTotal, year4SpringTotal;
 
     private Map<VBox, Label> totalMap = new HashMap<>();
+    private Course[] courses;
+    private InfoGetter = new Information_Gatherer();
 
     @FXML
     public void initialize() {
@@ -93,7 +96,11 @@ addCourse("THEO 201", "2");  // Theology Survey I
 
         updateAllTotals();
     }
-
+    //make an event here for when a user inputs a URL into the URL box and finishes typing
+    @FXML onURLSubmit(ActionEvent e) {
+        InfoGetter.run(URLBox.getText()); //this might need to be get content or whatever
+    }
+    
     public void addCourse(String name, String credits) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard/CourseBlock.fxml"));
