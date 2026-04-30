@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+
+<StackPane fx:id="courseBlock" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="121.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Dashboard.CourseBlockController">
+   <children>
+      <Label fx:id="courseCredits" text="3" StackPane.alignment="CENTER_LEFT">
+         <StackPane.margin>
+            <Insets left="5.0" />
+         </StackPane.margin></Label>
+      <CheckBox fx:id="checkbox" mnemonicParsing="false" textFill="#02901c" StackPane.alignment="CENTER_RIGHT">
+         <StackPane.margin>
+            <Insets bottom="3.0" left="2.0" right="2.0" top="2.0" />
+         </StackPane.margin>
+      </CheckBox>
+      <Label fx:id="courseLabel" text="CLAS 101" />
+   </children>
+</StackPane>
