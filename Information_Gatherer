@@ -35,7 +35,7 @@ To do this, we'll get a pdf of course requirements from the liberty site, then r
     
     static ArrayList<Course> courses = new ArrayList();
     
-    public static void main(String[] args) throws MalformedURLException, IOException {
+    public static Course[] run(String args) throws MalformedURLException, IOException {
         
         /**
          * Inital data loading
@@ -44,14 +44,14 @@ To do this, we'll get a pdf of course requirements from the liberty site, then r
         Pattern findStrongdiv = Pattern.compile("<strong>.+?</strong>");
         Pattern findPrereq = Pattern.compile("<div class=\"cou.+?Prerequisite.+?</div>");
         Pattern courseName = Pattern.compile("title=\"[A-Z]{4}..\\d{3}");
-        Scanner userInput = new Scanner(System.in); 
+        //Scanner userInput = new Scanner(System.in); 
         
-        System.out.print("Please copy-paste liberty's URL for the course plan:");
+        //System.out.print("Please copy-paste liberty's URL for the course plan:");
         
         //get data from offering webpage (such as https://catalog.liberty.edu/undergraduate/colleges-schools/business/information-technology-major-bs/application-database-development-resident/index.html?_gl=1*1vvwump*_ga*OTI5NDU1MDMxLjE3NTk5ODMzNTU.*_ga_YK8WH8QD6R*czE3NzY2NzU1MDUkbzIxMSRnMSR0MTc3NjY3NzIyNyRqNDIkbDAkaDA.*_ga_T1DG1LRPCP*czE3NzY2NzU1MTEkbzY2JGcxJHQxNzc2Njc3MjI3JGo0NiRsMCRoMA..#coursesequencetext)
         //got this from https://stackoverflow.com/questions/31462/how-to-fetch-html-in-java
-        String theURL = userInput.next();
-        URL url = new URL(theURL);
+        //String theURL = userInput.next();
+        URL url = new URL(args);
         InputStream is = url.openStream();
         int ptr = 0;
         StringBuffer buffer = new StringBuffer();
@@ -144,11 +144,12 @@ To do this, we'll get a pdf of course requirements from the liberty site, then r
         }
             //loader = null;
         //System.out.print(buffer);
-        Course c = new Course("TEST 001", "5");
-        c.addPrerequisite(courses.get(1));
-        c.addPrerequisite(courses.get(10));
-        courses.add(c);
+        //Course c = new Course("TEST 001", "5");
+        //c.addPrerequisite(courses.get(1));
+        //c.addPrerequisite(courses.get(10));
+        //courses.add(c);
     printAllCourses();
+    return courses;
     }
     private static void printAllCourses() {
         for (Course c : courses) {
