@@ -10,12 +10,10 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class Ganttural_Resolution {
+public class I_fucking_hate_ads {
 /*
 basic plan: Liberty University has certain course requirements for each major. It's registration website does not contain
 a simple visual representation of course precidence. I want to make a mapping tool to help students plan their college courses.
@@ -127,6 +125,7 @@ To do this, we'll get a pdf of course requirements from the liberty site, then r
                          */
                         while (courseExtractor.find()) {//get prerequisite course name, format: "title=\"[A-Z]{4} \\d{3}".
                             String namelocal = courseExtractor.group().substring(7); //7 converts [title="ESOL 100] -> [ESOL 100]
+                            namelocal = namelocal.substring(0, 4) + " " + namelocal.substring(6); //removes HTML 'à' artifact
                             isREALcourse(namelocal); 
                         } //repeat until no more course names are given.
                     } 
@@ -158,6 +157,8 @@ To do this, we'll get a pdf of course requirements from the liberty site, then r
         InputStream is = url.openStream();
         processScrape(is);
         */
+        runScraper("https://catalog.liberty.edu/undergraduate/colleges-schools/business/information-technology-major-bs/application-database-development-resident/index.html?_gl=1*1vvwump*_ga*OTI5NDU1MDMxLjE3NTk5ODMzNTU.*_ga_YK8WH8QD6R*czE3NzY2NzU1MDUkbzIxMSRnMSR0MTc3NjY3NzIyNyRqNDIkbDAkaDA.*_ga_T1DG1LRPCP*czE3NzY2NzU1MTEkbzY2JGcxJHQxNzc2Njc3MjI3JGo0NiRsMCRoMA..#coursesequencetext");
+        
     }
 
     private static void printAllCourses() {
