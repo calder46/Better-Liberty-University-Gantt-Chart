@@ -1,8 +1,14 @@
 package Dashboard;
 
+// Gemini: Imported the other package classes to link the GUI to the Scraper
+import JavaFinalProject.Course; 
+import JavaFinalProject.Ganttural_Resolution;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
@@ -13,30 +19,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
 
 public class DashboardController {
 
+    // Gemini: Added UI elements to handle the scraping input
+    @FXML private TextField loadURL;
+    @FXML private Button loadButton;
+
+    // Semester and Storage Columns
     @FXML private VBox remainingCourses, externalCourses;
     @FXML private VBox year1Fall, year1Spring, year2Fall, year2Spring;
     @FXML private VBox year3Fall, year3Spring, year4Fall, year4Spring;
-    @FXML private TextField URLBox; //make sure to implement this in SceneBuilder
     
+    // Total Credit Labels
     @FXML private Label remainingTotal, externalTotal;
     @FXML private Label year1FallTotal, year1SpringTotal, year2FallTotal, year2SpringTotal;
     @FXML private Label year3FallTotal, year3SpringTotal, year4FallTotal, year4SpringTotal;
 
     private Map<VBox, Label> totalMap = new HashMap<>();
-    private Course[] courses;
-    private InfoGetter = new Information_Gatherer();
 
     @FXML
     public void initialize() {
-        VBox[] semesterBoxes = {
-            remainingCourses, externalCourses, 
-            year1Fall, year1Spring, year2Fall, year2Spring, 
-            year3Fall, year3Spring, year4Fall, year4Spring
-        };
-        
+        // Map columns to their total labels for easy updating
         totalMap.put(remainingCourses, remainingTotal);
         totalMap.put(externalCourses, externalTotal);
         totalMap.put(year1Fall, year1FallTotal);
@@ -48,97 +53,87 @@ public class DashboardController {
         totalMap.put(year4Fall, year4FallTotal);
         totalMap.put(year4Spring, year4SpringTotal);
 
+        VBox[] semesterBoxes = {
+            remainingCourses, externalCourses, 
+            year1Fall, year1Spring, year2Fall, year2Spring, 
+            year3Fall, year3Spring, year4Fall, year4Spring
+        };
+
         for (VBox box : semesterBoxes) {
-            if (box != null) {
-                setupDropTarget(box);
-            }
+            if (box != null) setupDropTarget(box);
         }
-
-        
-        
-// --- SEMESTER 1 TEST DATA ---
-addCourse("MATH 131", "4");  // Calculus I
-addCourse("CSIS 100", "3");  // Intro to Information Sciences
-addCourse("ENGL 101", "3");  // Composition & Rhetoric
-addCourse("BIBL 105", "2");  // Old Testament Survey
-addCourse("PSYC 101", "3");  // General Psychology
-
-// --- SEMESTER 2 TEST DATA ---
-addCourse("MATH 132", "4");  // Calculus II
-addCourse("CSIS 110", "3");  // Introduction to Computing Sciences
-addCourse("PHYS 231", "4");  // University Physics I
-addCourse("ENGL 102", "3");  // Composition & Literature
-addCourse("COMS 101", "3");  // Speech Communication
-
-// --- SEMESTER 3 TEST DATA ---
-addCourse("CSIS 212", "3");  // Object-Oriented Programming
-addCourse("MATH 250", "3");  // Introduction to Discrete Mathematics
-addCourse("PHYS 232", "4");  // University Physics II
-addCourse("BIBL 110", "2");  // New Testament Survey
-addCourse("HIEU 201", "3");  // History of Western Civilization I
-
-// --- SEMESTER 4 TEST DATA ---
-addCourse("CSIS 312", "3");  // Advanced Object-Oriented Programming
-addCourse("CSIS 434", "3");  // Network Security
-addCourse("MATH 350", "3");  // Discrete Mathematics
-addCourse("RLGN 105", "2");  // Intro to Biblical Worldview
-addCourse("GOVT 220", "3");  // American Government
-
-// --- MISC / REMAINING COURSES ---
-addCourse("CSIS 499", "3");  // Computer Science Capstone
-addCourse("BUSI 310", "3");  // Principles of Management
-addCourse("CHEM 121", "4");  // General Chemistry I
-addCourse("SPAN 101", "3");  // Elementary Spanish I
-addCourse("THEO 201", "2");  // Theology Survey I
-        
-
-
-
         updateAllTotals();
     }
-    //make an event here for when a user inputs a URL into the URL box and finishes typing
-    @FXML onURLSubmit(ActionEvent e) {
-        InfoGetter.run(URLBox.getText()); //this might need to be get content or whatever
+
+    // Gemini: Logic to handle the clicking of the Load Button
+    @FXML
+    private void handleLoadAction() {
+        String url = loadURL.getText();
+        if (url == null || url.trim().isEmpty()) {
+            System.out.println("Gemini: URL field is empty.");
+            return;
+        }
+
+        // Gemini: Trigger the scraper logic in the other package
+        Ganttural_Resolution.runScraper(url);
+        
+        // Gemini: Clear existing courses from the list columns before importing new ones
+        remainingCourses.getChildren().clear();
+        externalCourses.getChildren().clear();
+        
+        importData();
+        updateAllTotals();
     }
-    
-    public void addCourse(String name, String credits) {
+
+    // Gemini: Pulls data from the scraper's static list and creates the UI blocks
+    public void importData() {
+        ArrayList<Course> importedCourses = Ganttural_Resolution.courses;
+        if (importedCourses == null || importedCourses.isEmpty()) return;
+        
+        for (Course c : importedCourses) {
+            // Sort into columns based on if they are "External" (0 credits) or standard
+            if (c.getHours() == 0) {
+                addCourseToColumn(externalCourses, c.getName(), "0");
+            } else {
+                addCourseToColumn(remainingCourses, c.getName(), String.valueOf(c.getHours()));
+            }
+        }
+    }
+
+    private void addCourseToColumn(VBox column, String name, String credits) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard/CourseBlock.fxml"));
+            // Gemini: Use relative path (no leading slash) to avoid NullPointerException
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("CourseBlock.fxml"));
             Parent courseNode = loader.load();
             
             CourseBlockController controller = loader.getController();
             controller.setCourseDetails(name, credits);
             
-            // APPLY COLOR LOGIC HERE
+            // Color code based on course level (100s, 200s, etc)
             applyLevelColor(courseNode, name);
             
-            if (remainingCourses != null) {
-                remainingCourses.getChildren().add(courseNode);
-                updateAllTotals();
-            }
+            if (column != null) column.getChildren().add(courseNode);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Gemini Error: Could not load CourseBlock.fxml - " + e.getMessage());
         }
     }
 
     private void applyLevelColor(Parent node, String courseName) {
-        // Base style to keep them from being "naked" (Radius and Border)
         String baseStyle = "-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #808080; -fx-border-width: 1;";
-        String bgColor = "-fx-background-color: #D3D3D3;"; // Default Gray
-
+        String bgColor = "-fx-background-color: #D3D3D3;"; // Default grey
+        
         Pattern pattern = Pattern.compile("\\d");
         Matcher matcher = pattern.matcher(courseName);
 
         if (matcher.find()) {
             char firstDigit = matcher.group().charAt(0);
             switch (firstDigit) {
-                case '1': bgColor = "-fx-background-color: #CCFFCC;"; break; // Light Blue
-                case '2': bgColor = "-fx-background-color: #FFFFCC;"; break; // Green
-                case '3': bgColor = "-fx-background-color: #FFCC99;"; break; // Yellow
-                case '4': bgColor = "-fx-background-color: #FFCCCC;"; break; // Red
+                case '1': bgColor = "-fx-background-color: #CCFFFF;"; break; // Blue-ish
+                case '2': bgColor = "-fx-background-color: #CCFFCC;"; break; // Green-ish
+                case '3': bgColor = "-fx-background-color: #FFFFCC;"; break; // Yellow-ish
+                case '4': bgColor = "-fx-background-color: #FFCCCC;"; break; // Red-ish
             }
         }
-        // Combine them so we don't lose the "clothes" (borders)
         node.setStyle(bgColor + baseStyle);
     }
 
@@ -168,9 +163,7 @@ addCourse("THEO 201", "2");  // Theology Survey I
 
     private void updateAllTotals() {
         totalMap.forEach((box, label) -> {
-            if (box != null && label != null) {
-                updateTotalCredits(box, label);
-            }
+            if (box != null && label != null) updateTotalCredits(box, label);
         });
     }
 
@@ -178,7 +171,6 @@ addCourse("THEO 201", "2");  // Theology Survey I
         int total = 0;
         for (javafx.scene.Node node : semesterBox.getChildren()) {
             if (node instanceof StackPane) {
-                // Safer lookup using the ID we set in FXML
                 Label creditsLabel = (Label) node.lookup("#courseCredits");
                 if (creditsLabel != null) {
                     try {
